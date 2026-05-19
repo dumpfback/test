@@ -6,6 +6,7 @@
 #include "core/utils.h"
 #if defined(USB_as_HID)
 #include "tusb.h"
+#include "../others/audio.h"
 #endif
 
 #define DEF_DELAY 100
@@ -452,6 +453,9 @@ void ducky_startKb(HIDInterface *&hid, bool ble) {
 
 // Start badUSBBLE or badBLE ducky runner
 void ducky_setup(HIDInterface *&hid, bool ble) {
+    /* BLE_HID_SONIC_PATCH_APPLIED */ // sonic on BLE HID action
+    if (ble) playWirelessSound();
+
     Serial.println("Ducky typer begin");
 
     if (ble && bruceConfig.badUSBBLEKeyDelay < 50) {
@@ -763,6 +767,9 @@ void key_input_from_string(String text) {
 #endif
 // Use device as a keyboard (USB or BLE)
 void ducky_keyboard(HIDInterface *&hid, bool ble) {
+    /* BLE_HID_SONIC_PATCH_APPLIED */ // sonic on BLE HID action
+    if (ble) playWirelessSound();
+
     String _mymsg = "";
     keyStroke key;
     long debounce = millis();
@@ -1159,6 +1166,9 @@ bool handlePauseResume() {
 
 // Presenter mode - simple button press to advance slides
 void PresenterMode(HIDInterface *&hid, bool ble) {
+    /* BLE_HID_SONIC_PATCH_APPLIED */ // sonic on BLE HID action
+    if (ble) playWirelessSound();
+
     if (_Ask_for_restart == 2) {
         displayError("Restart your Device");
         delay(1000);

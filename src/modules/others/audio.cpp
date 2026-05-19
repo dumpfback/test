@@ -748,45 +748,68 @@ void _tone(unsigned int frequency, unsigned long duration) {
 #endif
 }
 
-/* WIRELESS_SOUND_PATCH_APPLIED */
+/* EXTENDED_SOUNDS_PATCH_APPLIED */
 /* ============================================================
- * playWirelessSound() — appended by sonic patch.
+ * Sonic action sounds — appended to audio.cpp by patcher.
  *
- * Plays /wireless.wav from SD or LittleFS in async mode (so the
- * caller doesn't block while the wireless command transmits).
+ * Three sound entry points, each plays a named WAV with a fallback
+ * chain so users can supply just one file or several.
  *
- * Falls back to /boot.wav if /wireless.wav doesn't exist, so users
- * can re-use their existing boot WAV. Returns true if a sound was
- * dispatched, false otherwise.
+ *   playWirelessSound()    : RF/BLE/NRF transmission events
+ *   playSuccessSound()     : displaySuccess() — RFID write/load/save etc.
+ *   playSpectrumExitSound(): on exit of any spectrum analyzer
  *
- * Self-throttles so rapid-fire RF/BLE spam doesn't continuously
- * trigger new playback attempts — only fires once per
- * WIRELESS_SOUND_COOLDOWN_MS regardless of caller frequency.
+ * Each has its own cooldown so they can't retrigger themselves.
+ * All gated on bruceConfig.soundEnabled.
  * ============================================================ */
 
-#define WIRELESS_SOUND_COOLDOWN_MS 250
+#include <SD.h>
+#include <LittleFS.h>
+#include <globals.h>
+
+#define WIRELESS_SOUND_COOLDOWN_MS   250
+#define SUCCESS_SOUND_COOLDOWN_MS    400
+#define EXIT_SOUND_COOLDOWN_MS       400
+
+/* Helper: try a sequence of paths on SD then LittleFS, async playback. */
+static bool _tryPlayAsync(const char *p1, const char *p2, const char *p3, const char *p4) {
+    if (p1 && SD.exists(p1))         return playAudioFile(&SD, p1, PLAYBACK_ASYNC);
+    if (p1 && LittleFS.exists(p1))   return playAudioFile(&LittleFS, p1, PLAYBACK_ASYNC);
+    if (p2 && SD.exists(p2))         return playAudioFile(&SD, p2, PLAYBACK_ASYNC);
+    if (p2 && LittleFS.exists(p2))   return playAudioFile(&LittleFS, p2, PLAYBACK_ASYNC);
+    if (p3 && SD.exists(p3))         return playAudioFile(&SD, p3, PLAYBACK_ASYNC);
+    if (p3 && LittleFS.exists(p3))   return playAudioFile(&LittleFS, p3, PLAYBACK_ASYNC);
+    if (p4 && SD.exists(p4))         return playAudioFile(&SD, p4, PLAYBACK_ASYNC);
+    if (p4 && LittleFS.exists(p4))   return playAudioFile(&LittleFS, p4, PLAYBACK_ASYNC);
+    return false;
+}
 
 bool playWirelessSound() {
     if (!bruceConfig.soundEnabled) return false;
-
-    static unsigned long s_last_play_ms = 0;
+    static unsigned long s_last_ms = 0;
     unsigned long now = millis();
-    if (now - s_last_play_ms < WIRELESS_SOUND_COOLDOWN_MS) return false;
-    s_last_play_ms = now;
+    if (now - s_last_ms < WIRELESS_SOUND_COOLDOWN_MS) return false;
+    s_last_ms = now;
+    return _tryPlayAsync("/wireless.wav", "/boot.wav", nullptr, nullptr);
+}
 
-    /* Prefer dedicated wireless.wav, fall back to boot.wav. */
-    if (SD.exists("/wireless.wav")) {
-        return playAudioFile(&SD, "/wireless.wav", PLAYBACK_ASYNC);
-    }
-    if (LittleFS.exists("/wireless.wav")) {
-        return playAudioFile(&LittleFS, "/wireless.wav", PLAYBACK_ASYNC);
-    }
-    if (SD.exists("/boot.wav")) {
-        return playAudioFile(&SD, "/boot.wav", PLAYBACK_ASYNC);
-    }
-    if (LittleFS.exists("/boot.wav")) {
-        return playAudioFile(&LittleFS, "/boot.wav", PLAYBACK_ASYNC);
-    }
-    return false;
+bool playSuccessSound() {
+    if (!bruceConfig.soundEnabled) return false;
+    static unsigned long s_last_ms = 0;
+    unsigned long now = millis();
+    if (now - s_last_ms < SUCCESS_SOUND_COOLDOWN_MS) return false;
+    s_last_ms = now;
+    /* Try success.wav first, then wireless.wav, then boot.wav. */
+    return _tryPlayAsync("/success.wav", "/wireless.wav", "/boot.wav", nullptr);
+}
+
+bool playSpectrumExitSound() {
+    if (!bruceConfig.soundEnabled) return false;
+    static unsigned long s_last_ms = 0;
+    unsigned long now = millis();
+    if (now - s_last_ms < EXIT_SOUND_COOLDOWN_MS) return false;
+    s_last_ms = now;
+    /* Try exit.wav first, then wireless.wav, then boot.wav. */
+    return _tryPlayAsync("/exit.wav", "/wireless.wav", "/boot.wav", nullptr);
 }
 

@@ -1,3 +1,9 @@
+/* EXTENDED_SOUNDS_INCLUDE_FIX_APPLIED */
+/* Forward decl of playSuccessSound() to avoid pulling in
+ * the full audio.h here — that triggers a SPIFFS/LittleFS macro
+ * conflict via JPEGDecoder.h. */
+bool playSuccessSound();
+
 #include "display.h"
 #include "core/wifi/webInterface.h" // for server
 #include "core/wifi/wg.h"           //for isConnectedWireguard to print wireguard lock
@@ -296,6 +302,7 @@ void displayInfo(String txt, bool waitKeyPress) {
 }
 
 void displaySuccess(String txt, bool waitKeyPress) {
+    /* EXTENDED_SOUNDS_PATCH_APPLIED */ playSuccessSound();
     // todo: add newlines to txt if too long
     displayRedStripe(txt, TFT_WHITE, TFT_DARKGREEN);
 #ifndef HAS_SCREEN

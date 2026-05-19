@@ -2,6 +2,9 @@
 #include "core/display.h"
 #include "core/mykeyboard.h"
 
+#include "../rf/spectrum_sonic.h"
+/* SPECTRUM_EXIT_SOUND_FIX_APPLIED */
+extern bool playSpectrumExitSound();
 #define CHANNELS 80
 #define RGB565(r, g, b) ((((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3)))
 uint8_t channel[CHANNELS];
@@ -22,6 +25,7 @@ String scanChannels(bool web) {
 
         int rpd = NRFradio.testRPD() ? 1 : 0;
         channel[i] = (channel[i] * 3 + rpd * 125) / 4;
+        /* NRF_SONIC_PATCH_APPLIED */ sonicSpectrumTickNRF(channel[i], i, CHANNELS);
         rpdValues[i] = channel[i];
     }
 
@@ -77,8 +81,10 @@ void nrf_spectrum() {
         NRFradio.setDataRate(RF24_1MBPS);
 
         while (!check(EscPress)) { scanChannels(); }
+        /* NRF_SONIC_PATCH_APPLIED */ sonicSpectrumStop();
         NRFradio.stopListening();
         NRFradio.powerDown();
+        /* SPECTRUM_EXIT_SOUND_FIX_APPLIED */ delay(120); playSpectrumExitSound();
         delay(250);
         return;
 

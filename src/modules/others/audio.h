@@ -42,6 +42,17 @@ AudioPlaybackInfo getAudioPlaybackInfo();    // Get current state for GUI
 void setAudioPlaybackVolume(uint8_t volume); // Change volume during playback
 
 /* WIRELESS_SOUND_PATCH_APPLIED */
-// Plays /wireless.wav (or /boot.wav fallback) async, used
-// by RF and BLE transmit functions for action feedback.
+// Plays /wireless.wav (or /boot.wav fallback) async, used by RF/BLE/NRF
+// transmit functions for action feedback.
 bool playWirelessSound();
+/* EXTENDED_SOUNDS_PATCH_APPLIED */
+// Plays /success.wav (or /wireless.wav or /boot.wav fallback) async.
+// Hooked into displaySuccess() — fires for any success event in Bruce,
+// including successful RFID file use/load/write.
+bool playSuccessSound();
+
+// Plays /exit.wav (or /wireless.wav or /boot.wav fallback) async.
+// Hooked into sonicSpectrumStop() — fires on exit of any spectrum
+// analyzer (RF Spectrum, NRF24 Spectrum).
+bool playSpectrumExitSound();
+

@@ -22,6 +22,8 @@
 #include <LittleFS.h>
 #include <globals.h>
 
+#include "../others/audio.h"
+#include "../rf/spectrum_sonic.h"
 // ── Garbage payload for data flooding ───────────────────────────
 // 32 bytes maximises TX duty cycle per burst at 2Mbps
 static const uint8_t JAM_FLOOD_DATA[32] = {0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0xDE, 0xAD, 0xBE,
@@ -722,6 +724,7 @@ static void runJammer(NRF24_MODE nrfMode, NrfJamMode jamMode) {
                 case 1: floodChannel(ch, dwellMs, burst); break;
                 case 2: turboFloodChannel(ch, burst); break;
             }
+            /* JAM_SONIC_PATCH_APPLIED */ sonicJamTickNRF(ch, (int)strategy);
 
             channel = ch;
             totalCh++;
@@ -739,6 +742,7 @@ static void runJammer(NRF24_MODE nrfMode, NrfJamMode jamMode) {
         }
     }
 
+    /* JAM_SONIC_PATCH_APPLIED */ sonicJamStop();
     // ── Cleanup ─────────────────────────────────────────────────
     if (CHECK_NRF_SPI(nrfMode)) {
         NRFradio.stopConstCarrier();
@@ -806,6 +810,9 @@ void nrf_jammer() {
 }
 
 void nrf_channel_jammer() {
+    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on nrf_jammer TX
+    playWirelessSound();
+
     int OnX = 0;
     NRF24_MODE mode = nrf_setMode();
     if (returnToMenu || mode == NRF_MODE_DISABLED) return;
@@ -835,6 +842,7 @@ void nrf_channel_jammer() {
 
     while (true) {
         if (check(EscPress)) break;
+        /* JAM_SONIC_PATCH_APPLIED */ if (!paused) sonicJamTickNRF(channel, 0);
 
         if (CHECK_NRF_UART(mode) || CHECK_NRF_BOTH(mode)) {
             if (OnX == 0) {
@@ -923,11 +931,15 @@ void nrf_channel_jammer() {
         }
     }
 
+    /* JAM_SONIC_PATCH_APPLIED */ sonicJamStop();
     if (CHECK_NRF_SPI(mode)) NRFradio.stopConstCarrier();
     if (CHECK_NRF_UART(mode) || CHECK_NRF_BOTH(mode)) NRFSerial.println("OFF");
 }
 
 void nrf_channel_hopper() {
+    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on nrf_jammer TX
+    playWirelessSound();
+
     loadJamConfigs();
 
     NRF24_MODE nrfMode = nrf_setMode();
@@ -1069,6 +1081,7 @@ void nrf_channel_hopper() {
                     }
 
                     if (CHECK_NRF_SPI(nrfMode)) { cwChannel(ch, 0); }
+                    /* JAM_SONIC_PATCH_APPLIED */ sonicJamTickNRF(ch, 0);
 
                     ch += hopCfg.stepSize;
                     if (ch > hopCfg.stopChannel) {
@@ -1078,6 +1091,7 @@ void nrf_channel_hopper() {
                 }
 
                 if (CHECK_NRF_SPI(nrfMode)) {
+                    /* JAM_SONIC_PATCH_APPLIED */ sonicJamStop();
                     NRFradio.stopConstCarrier();
                     NRFradio.powerDown();
                 }

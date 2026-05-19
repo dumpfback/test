@@ -133,7 +133,7 @@ void stopAppleSpam() {
 }
 
 void quickAppleSpam(int payloadIndex) {
-    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on Apple BLE spam
+    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on apple_spam TX
     playWirelessSound();
 
     if (payloadIndex < 0 || payloadIndex >= apple_payload_count) return;
@@ -177,7 +177,7 @@ void quickAppleSpam(int payloadIndex) {
 }
 
 void startAppleSpamAll() {
-    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on Apple BLE spam
+    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on apple_spam TX
     playWirelessSound();
 
     if (apple_spam_running) stopAppleSpam();
@@ -242,7 +242,7 @@ void startAppleSpamAll() {
 }
 
 void startAppleSpam(int payloadIndex) {
-    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on Apple BLE spam
+    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on apple_spam TX
     playWirelessSound();
 
     if (payloadIndex < 0 || payloadIndex >= apple_payload_count) return;

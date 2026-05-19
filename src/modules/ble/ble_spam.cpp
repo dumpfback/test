@@ -243,7 +243,7 @@ BLEAdvertisementData GetUniversalAdvertisementData(EBLEPayloadType Type, String 
 }
 
 void executeSpam(EBLEPayloadType type, String customName = "") {
-    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on BLE transmit
+    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on ble_spam TX
     playWirelessSound();
 
     uint8_t macAddr[6];
@@ -276,7 +276,7 @@ void executeSpam(EBLEPayloadType type, String customName = "") {
 }
 
 void executeCustomSpam(String spamName) {
-    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on BLE transmit
+    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on ble_spam TX
     playWirelessSound();
 
     uint8_t macAddr[6];

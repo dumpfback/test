@@ -337,7 +337,7 @@ bool txSubFile(RfCodes &selected_code, bool hideDefaultUI) {
 }
 
 void sendRfCommand(struct RfCodes rfcode, bool hideDefaultUI) {
-    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on RF transmit
+    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on rf_send TX
     playWirelessSound();
 
     uint32_t frequency = rfcode.frequency;

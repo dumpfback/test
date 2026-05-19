@@ -5,6 +5,7 @@
 #include <ELECHOUSE_CC1101_SRC_DRV.h>
 #include <globals.h>
 
+#include "spectrum_sonic.h"
 static const uint32_t MAX_SEQUENCE = 50;
 static const uint32_t DURATION_CYCLES = 3;
 
@@ -222,6 +223,7 @@ void RFJammer::run_full_jammer() {
 
         // Phase rotation every 100ms for maximum spectral diversity
         phase = (elapsed / 100) % 3;
+        /* JAM_SONIC_PATCH_APPLIED */ sonicJamTickFixed(phase);
 
         switch (phase) {
         case 0:
@@ -272,6 +274,7 @@ void RFJammer::run_full_jammer() {
         }
     }
     digitalWrite(nTransmitterPin, LOW);
+    /* JAM_SONIC_PATCH_APPLIED */ sonicJamStop();
 }
 
 // ── INTERMITTENT: Varied pulse patterns + bursts ────────────────
@@ -289,6 +292,7 @@ void RFJammer::run_itmt_jammer() {
         // Forward sweep: 10µs → 500µs
         for (uint32_t sequence = 0; sequence < MAX_SEQUENCE && sendRF; sequence++) {
             uint32_t pulseWidth = sequenceValues[sequence];
+            /* JAM_SONIC_PATCH_APPLIED */ sonicJamTickFixed((int)sequence);
 
             for (uint32_t duration = 0; duration < DURATION_CYCLES && sendRF; duration++) {
                 send_optimized_pulse(pulseWidth);
@@ -334,6 +338,7 @@ void RFJammer::run_itmt_jammer() {
         }
     }
     digitalWrite(nTransmitterPin, LOW);
+    /* JAM_SONIC_PATCH_APPLIED */ sonicJamStop();
 }
 
 // ── NOISE STORM: CC1101 PN9 hardware random TX ─────────────────
@@ -371,6 +376,7 @@ void RFJammer::run_noise_jammer() {
     static const char *modNames[] = {"ASK/OOK", "2-FSK", "MSK"};
 
     while (sendRF) {
+        /* JAM_SONIC_PATCH_APPLIED */ static int _jam_noise_v = 0; sonicJamTickFixed(_jam_noise_v++);
         uint32_t currentTime = millis();
 
         // Cycle modulation scheme every 3 seconds for spectral diversity
@@ -410,6 +416,7 @@ void RFJammer::run_noise_jammer() {
     // Restore CC1101 to idle
     ELECHOUSE_cc1101.setSidle();
     ELECHOUSE_cc1101.setPktFormat(3); // Restore async serial mode
+    /* JAM_SONIC_PATCH_APPLIED */ sonicJamStop();
 }
 
 // ── FREQ SWEEP: Hop around target frequency ─────────────────────
@@ -440,6 +447,7 @@ void RFJammer::run_sweep_jammer() {
     while (sendRF) {
         // Sweep frequency
         ELECHOUSE_cc1101.setMHZ(currentFreq);
+        /* JAM_SONIC_PATCH_APPLIED */ sonicJamTickFreq(currentFreq, sweepMin, sweepMax, 0.7f);
 
         // TX burst at each frequency — 40 pulses with tight timing
         for (int burst = 0; burst < 40 && sendRF; burst++) {
@@ -498,6 +506,7 @@ void RFJammer::run_sweep_jammer() {
     digitalWrite(nTransmitterPin, LOW);
     // Restore original frequency
     ELECHOUSE_cc1101.setMHZ(baseFreq);
+    /* JAM_SONIC_PATCH_APPLIED */ sonicJamStop();
 }
 
 void RFJammer::send_optimized_pulse(int width) {

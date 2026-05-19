@@ -2,6 +2,10 @@
 #include "rf_utils.h"
 #include "structs.h"
 #include <RCSwitch.h>
+/* SONIC_PATCH_APPLIED */
+#include "spectrum_sonic.h"
+/* SPECTRUM_EXIT_SOUND_FIX_APPLIED */
+extern bool playSpectrumExitSound();
 
 static bool spectrum_rmt_rx_done_callback(
     rmt_channel_t *channel, const rmt_rx_done_event_data_t *edata, void *user_data
@@ -206,6 +210,7 @@ void rf_CC1101_rssi() {
         // draw dot graph for fixed frequency
         if (bruceConfigPins.rfFxdFreq) {
             int rssi = ELECHOUSE_cc1101.getRssi();
+            /* SONIC_PATCH_APPLIED */ sonicSpectrumTickRSSI(rssi);
             tft.drawPixel(0, 0, 0); // To make sure CC1101 shared with TFT works properly
             const int base_y = tftHeight - 120;
             int prev = signal[0];
@@ -239,6 +244,7 @@ void rf_CC1101_rssi() {
                 setMHZ(subghz_frequency_list[range_limits[bruceConfigPins.rfScanRange][0] + i]);
                 vTaskDelay(pdMS_TO_TICKS(5));
                 int rssi = ELECHOUSE_cc1101.getRssi();
+                /* SONIC_PATCH_APPLIED */ sonicSpectrumTickScan(rssi, subghz_frequency_list[range_limits[bruceConfigPins.rfScanRange][0] + i], i, range);
                 tft.drawPixel(0, 0, 0); // To make sure CC1101 shared with TFT works properly
                 int size = map(rssi, -95, -20, 0, max_bar_size);
                 if (size > bar_size[i]) bar_size[i] = size;
@@ -264,7 +270,9 @@ void rf_CC1101_rssi() {
             redraw = true;
         }
     }
+    /* SONIC_PATCH_APPLIED */ sonicSpectrumStop();
     deinitRfModule();
+    /* SPECTRUM_EXIT_SOUND_FIX_APPLIED */ delay(120); playSpectrumExitSound();
 #else
     displayError("Not available on Launcher version");
 #endif

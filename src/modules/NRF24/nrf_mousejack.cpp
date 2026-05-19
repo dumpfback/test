@@ -17,6 +17,7 @@
 #include <SD.h>
 #include <globals.h>
 
+#include "../others/audio.h"
 // ── Tuning Constants ────────────────────────────────────────────
 static constexpr int SCAN_TRIES_PER_CH = 6;
 static constexpr int SCAN_DWELL_US = 500;
@@ -740,6 +741,9 @@ static void mj_setupTxForTarget(const MjTarget &target) {
 
 // ── Attack: Inject String ───────────────────────────────────────
 static void mj_attackString(int targetIndex) {
+    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on nrf_mousejack TX
+    playWirelessSound();
+
     const MjTarget &target = mj_targets[targetIndex];
 
     // Get string from user via keyboard
@@ -791,6 +795,9 @@ static void mj_attackString(int targetIndex) {
 
 // ── Attack: DuckyScript from SD Card ────────────────────────────
 static void mj_attackDucky(int targetIndex) {
+    /* WIRELESS_SOUND_PATCH_APPLIED */ // sonic on nrf_mousejack TX
+    playWirelessSound();
+
     const MjTarget &target = mj_targets[targetIndex];
 
     // File browser
